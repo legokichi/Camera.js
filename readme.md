@@ -1,6 +1,10 @@
 Camera.js
 ======================
-  using Web Camera
+  using Web Camera by getUserMedia
+
+Demo
+----------
+http://jsdo.it/DUxCA/wIQF
 
 Usage
 ----------
