@@ -1,6 +1,6 @@
 class this.Camera
   "use strict"
-
+  # ver 2013-08-06
   navigator.getUserMedia =
     navigator.getUserMedia or
     navigator.msGetUserMedia or
@@ -18,8 +18,9 @@ class this.Camera
     @width    = opt.width  or null
     @height   = opt.height or null
     @interval = opt.interval or 33
+    @mirror   = if opt.mirror?   then opt.mirror   else false
     @useAudio = if opt.useAudio? then opt.useAudio else true
-    @useVideo = if opt.useVideo? then opt.useAudio else true
+    @useVideo = if opt.useVideo? then opt.useVideo else true
     @video    = opt.video  or document.createElement("video")
     @canvas   = opt.canvas or document.createElement("canvas")
     @context  =  @canvas.getContext("2d")
@@ -36,19 +37,28 @@ class this.Camera
     @
 
   draw: (fn)->
+    @video.addEventListener("play", (=>
+      setTimeout(recur, @interval)
+    ), false)
+    
+    recur = =>
+      if @mirror
+        @context.translate(this.width, 0);
+        @context.scale(-1, 1);
+        @context.drawImage(@video, 0, 0, @width, @height)
+        @context.translate(this.width, 0);
+        @context.scale(-1, 1);
+      else
+        @context.drawImage(@video, 0, 0, @width, @height)
+        
+      fn.call(@)
+      setTimeout(recur, @interval)
+
     success = (stream)=>
       if @video.mozSrcObject?
         @video.mozSrcObject = stream
       else
         @video.src = window.URL.createObjectURL(stream) or stream
-      @video.addEventListener("play", (=>
-        setTimeout(recur, @interval)
-      ), false)
-
-    recur = =>
-      @context.drawImage(@video, 0, 0, @width, @height)
-      fn.call(@)
-      setTimeout(recur, @interval)
 
     error = ->
       alert("There has been a problem retrieving the streams - did you allow access?")
@@ -59,4 +69,4 @@ class this.Camera
         audio: @useAudio
       }, success, error)
     else
-      console.log('Native web camera streaming (getUserMedia) not supported in this browser.');
+      alert("Native web camera streaming (getUserMedia) not supported in this browser.")

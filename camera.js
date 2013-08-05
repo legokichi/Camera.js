@@ -11,8 +11,9 @@ this.Camera = (function() {
     this.width = opt.width || null;
     this.height = opt.height || null;
     this.interval = opt.interval || 33;
+    this.mirror = opt.mirror != null ? opt.mirror : false;
     this.useAudio = opt.useAudio != null ? opt.useAudio : true;
-    this.useVideo = opt.useVideo != null ? opt.useAudio : true;
+    this.useVideo = opt.useVideo != null ? opt.useVideo : true;
     this.video = opt.video || document.createElement("video");
     this.canvas = opt.canvas || document.createElement("canvas");
     this.context = this.canvas.getContext("2d");
@@ -38,20 +39,28 @@ this.Camera = (function() {
   Camera.prototype.draw = function(fn) {
     var error, recur, success,
       _this = this;
-    success = function(stream) {
-      if (_this.video.mozSrcObject != null) {
-        _this.video.mozSrcObject = stream;
-      } else {
-        _this.video.src = window.URL.createObjectURL(stream) || stream;
-      }
-      return _this.video.addEventListener("play", (function() {
-        return setTimeout(recur, _this.interval);
-      }), false);
-    };
+    this.video.addEventListener("play", (function() {
+      return setTimeout(recur, _this.interval);
+    }), false);
     recur = function() {
-      _this.context.drawImage(_this.video, 0, 0, _this.width, _this.height);
+      if (_this.mirror) {
+        _this.context.translate(_this.width, 0);
+        _this.context.scale(-1, 1);
+        _this.context.drawImage(_this.video, 0, 0, _this.width, _this.height);
+        _this.context.translate(_this.width, 0);
+        _this.context.scale(-1, 1);
+      } else {
+        _this.context.drawImage(_this.video, 0, 0, _this.width, _this.height);
+      }
       fn.call(_this);
       return setTimeout(recur, _this.interval);
+    };
+    success = function(stream) {
+      if (_this.video.mozSrcObject != null) {
+        return _this.video.mozSrcObject = stream;
+      } else {
+        return _this.video.src = window.URL.createObjectURL(stream) || stream;
+      }
     };
     error = function() {
       return alert("There has been a problem retrieving the streams - did you allow access?");
@@ -62,7 +71,7 @@ this.Camera = (function() {
         audio: this.useAudio
       }, success, error);
     } else {
-      return console.log('Native web camera streaming (getUserMedia) not supported in this browser.');
+      return alert("Native web camera streaming (getUserMedia) not supported in this browser.");
     }
   };
 
