@@ -1,55 +1,69 @@
-var Camera;
+this.Camera = (function() {
+  "use strict";
+  navigator.getUserMedia = navigator.getUserMedia || navigator.msGetUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
 
-Camera = (function() {
+  window.URL = window.URL || window.msURL || window.mozURL || window.webkitURL;
 
-  navigator.getUserMedia =
-    navigator.getUserMedia ||
-    navigator.msGetUserMedia ||
-    navigator.mozGetUserMedia ||
-    navigator.webkitGetUserMedia;
-
-  function Camera(option) {
-    if (option == null) {
-      option = {};
+  function Camera(opt) {
+    if (opt == null) {
+      opt = {};
     }
-    this.width = option.width || 640;
-    this.height = option.height || 480;
-    this.useAudio = option.useAudio === void 0 ? true : false;
-    this.useVideo = option.useVideo === void 0 ? true : false;
-    this.interval = option.interval || 33;
-    this.video = option.video || document.createElement("video");
-    this.canvas = option.canvas || document.createElement("canvas");
+    this.width = opt.width || null;
+    this.height = opt.height || null;
+    this.interval = opt.interval || 33;
+    this.useAudio = opt.useAudio != null ? opt.useAudio : true;
+    this.useVideo = opt.useVideo != null ? opt.useAudio : true;
+    this.video = opt.video || document.createElement("video");
+    this.canvas = opt.canvas || document.createElement("canvas");
     this.context = this.canvas.getContext("2d");
-    this.canvas.width = this.video.width = this.width;
-    this.canvas.height = this.video.height = this.height;
   }
 
   Camera.prototype.setup = function(fn) {
-    fn.call(this);
+    var _this = this;
+    this.video.addEventListener("loadeddata", (function() {
+      if (_this.width == null) {
+        _this.width = _this.video.videoWidth;
+      }
+      if (_this.height == null) {
+        _this.height = _this.video.videoHeight;
+      }
+      _this.canvas.width = _this.video.width = _this.width;
+      _this.canvas.height = _this.video.height = _this.height;
+      fn.call(_this);
+      return _this.video.play();
+    }), false);
     return this;
   };
 
   Camera.prototype.draw = function(fn) {
     var error, recur, success,
       _this = this;
-    error = function() {
-      return alert("There has been a problem retrieving the streams - did you allow access?");
-    };
     success = function(stream) {
-      _this.video.src = URL.createObjectURL(stream);
-      _this.video.autoplay = true;
-      return setTimeout(recur, _this.interval);
+      if (_this.video.mozSrcObject != null) {
+        _this.video.mozSrcObject = stream;
+      } else {
+        _this.video.src = window.URL.createObjectURL(stream) || stream;
+      }
+      return _this.video.addEventListener("play", (function() {
+        return setTimeout(recur, _this.interval);
+      }), false);
     };
     recur = function() {
       _this.context.drawImage(_this.video, 0, 0, _this.width, _this.height);
       fn.call(_this);
       return setTimeout(recur, _this.interval);
     };
-    navigator.getUserMedia({
-      video: this.useVideo,
-      audio: this.useAudio
-    }, success, error);
-    return this;
+    error = function() {
+      return alert("There has been a problem retrieving the streams - did you allow access?");
+    };
+    if (navigator.getUserMedia != null) {
+      return navigator.getUserMedia({
+        video: this.useVideo,
+        audio: this.useAudio
+      }, success, error);
+    } else {
+      return console.log('Native web camera streaming (getUserMedia) not supported in this browser.');
+    }
   };
 
   return Camera;

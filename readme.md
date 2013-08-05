@@ -4,7 +4,7 @@ Camera.js
 
 Demo
 ----------
-http://jsdo.it/DUxCA/wIQF
+http://jsdo.it/DUxCA/6o6i
 
 Usage
 ----------
