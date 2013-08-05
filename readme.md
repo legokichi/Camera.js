@@ -9,19 +9,19 @@ http://jsdo.it/DUxCA/6o6i
 Usage
 ----------
     new Camera({
-      width: 320,
-      height:240,
-      delay:0
+        width:320,
+        height:240,
+        useAudio: false
     }).setup(function(){
-      document.body.appnedChild(this.canvas);
+        document.body.appendChild(this.canvas);
     }).draw(function(){
       var imgdata = this.context.getImageData(0, 0, this.width, this.height);
       var data = imgdata.data;
       for(var i=0; i<data.length; i+=4){
-        //data[i]   = 0 // R
-        //data[i+1] = 0 // G
-        //data[i+2] = 0 // B
-        data[i+3] = 128 // A
+        data[i]   = 0; // R
+        //data[i+1] = 0; // G
+        //data[i+2] = 0; // B
+        //data[i+3] = 127; // A
       }
       this.context.putImageData(imgdata, 0, 0);
     });
